@@ -27,7 +27,7 @@ namespace MVC.Services
 
             CheckEmail(userRegisterModel);
             CheckGender(userRegisterModel.Gender);
-            CheckBirthdate(userRegisterModel.BirthDate);
+            CheckBirthdate(userRegisterModel.Birthdate);
 
             byte[] salt;
             RandomNumberGenerator.Create().GetBytes(salt = new byte[16]);
@@ -38,19 +38,40 @@ namespace MVC.Services
             Array.Copy(hash, 0, hashBytes, 16, 20);
             var savedPasswordHash = Convert.ToBase64String(hashBytes);
 
+            if (userRegisterModel.Birthdate.HasValue)
+            {
+                userRegisterModel.Birthdate = userRegisterModel.Birthdate.Value.ToUniversalTime();
+            }
+
             UserModel user = new UserModel 
             {
                 Id = Guid.NewGuid(),
                 Name = userRegisterModel.Name,
                 Email = userRegisterModel.Email,
                 Password = savedPasswordHash,
-                Birthdate = userRegisterModel.BirthDate,
+                Birthdate = userRegisterModel.Birthdate,
                 Gender = userRegisterModel.Gender,
                 PhoneNumber = userRegisterModel.PhoneNumber,
             };
 
-            await _context.Users.AddAsync(user);
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.Users.AddAsync(user);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                var innerException = ex.InnerException;
+                while (innerException != null)
+                {
+                    Console.WriteLine("Inner Exception: " + innerException.Message);
+                    innerException = innerException.InnerException;
+                }
+                // Дополнительная обработка ошибки, логирование и т.д.
+            }
+
+            //await _context.Users.AddAsync(user);
+            //await _context.SaveChangesAsync();
 
             var credentials = new LoginCredentials
             {

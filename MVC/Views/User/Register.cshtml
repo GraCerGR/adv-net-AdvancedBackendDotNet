@@ -1,0 +1,38 @@
+﻿@{
+    ViewData["Title"] = "Register";
+}
+
+@model UserRegisterModel
+
+<form asp-controller="User" asp-action="RegisterUser" method="post">
+    <label>Name:</label>
+    <input type="text" asp-for="Name" /><br />
+    <label>Email:</label>
+    <input type="text" asp-for="Email" /><br />
+    <label>Password:</label>
+    <input type="password" asp-for="Password" /><br />
+    <label>Gender:</label>
+    <input type="text" asp-for="Gender" /><br />
+    <label>Birthdate:</label>
+    <input type="date" asp-for="Birthdate" /><br />
+    <label>Phone Number:</label>
+    <input type="text" asp-for="Citizenship" /><br />
+    <label>Phone Number:</label>
+    <input type="text" asp-for="PhoneNumber" /><br />
+    <button type="submit">Register</button>
+</form>
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        <ul>
+            @foreach (var modelState in ViewData.ModelState.Values)
+            {
+                foreach (var error in modelState.Errors)
+                {
+                    <li>@error.ErrorMessage</li>
+                }
+            }
+        </ul>
+    </div>
+}

@@ -18,7 +18,7 @@ namespace MVC.Models
         [MinLength(6)]
         public string Password { get; set; }
 
-        public DateTime? BirthDate { get; set; }
+        public DateTime? Birthdate { get; set; }
 
         public string? Gender { get; set; }
 
