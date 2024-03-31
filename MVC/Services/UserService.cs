@@ -86,6 +86,26 @@ namespace MVC.Services
         public async Task<TokenResponse> LoginUser(LoginCredentials credentials)
         {
 
+            var userEntity = await _context.Users.FirstOrDefaultAsync(x => x.Email == credentials.Email);
+
+            if (userEntity == null)
+            {
+                var ex = new Exception();
+                ex.Data.Add(StatusCodes.Status401Unauthorized.ToString(),
+                    "User not exists"
+                );
+                throw ex;
+            }
+
+            if (!CheckHashPassword(userEntity.Password, credentials.Password))
+            {
+                var ex = new Exception();
+                ex.Data.Add(StatusCodes.Status401Unauthorized.ToString(),
+                    "Wrong password"
+                );
+                throw ex;
+            }
+
             // Генерация токена
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.UTF8.GetBytes("1234567890123456789012345678901234567890");
@@ -98,7 +118,7 @@ namespace MVC.Services
                 Audience = "HITS",
                 Subject = new ClaimsIdentity(new Claim[]
                 {
-            new Claim(ClaimTypes.Name, credentials.Email.ToString())
+            new Claim(ClaimTypes.Name, userEntity.Id.ToString())
                 })
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);
@@ -110,6 +130,36 @@ namespace MVC.Services
             };
 
             return result;
+        }
+
+
+        public async Task<UserModel> GetProfile(string userId)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id.ToString() == userId);
+
+            if (user == null)
+            {
+                return null;
+            }
+
+            var userProfile = new UserModel
+            {
+                Name = user.Name,
+                Birthdate = user.Birthdate,
+                Gender = user.Gender,
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                Citizenship = user.Citizenship
+            };
+
+            return userProfile;
+        }
+
+        public async Task<string> GetUserIdFromToken(string bearerToken)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var jwtToken = tokenHandler.ReadJwtToken(bearerToken);
+            return await Task.FromResult(jwtToken.Claims.FirstOrDefault(c => c.Type == "unique_name")?.Value);
         }
 
 
@@ -127,7 +177,7 @@ namespace MVC.Services
 
         private static void CheckGender(string gender)
         {
-            if (gender == Gender.Male.ToString() || gender == Gender.Female.ToString()) return;
+            if (gender == null || gender == Gender.Male.ToString() || gender == Gender.Female.ToString()) return;
 
             var ex = new Exception();
             ex.Data.Add(StatusCodes.Status409Conflict.ToString(), $"Possible Gender values: {Gender.Male.ToString()}, {Gender.Female.ToString()}");
@@ -141,6 +191,19 @@ namespace MVC.Services
             var ex = new Exception();
             ex.Data.Add(StatusCodes.Status409Conflict.ToString(),"Birth date can't be later than today");
             throw ex;
+        }
+
+        private static bool CheckHashPassword(string savedPasswordHash, string password)
+        {
+            var hashBytes = Convert.FromBase64String(savedPasswordHash);
+            var salt = new byte[16];
+            Array.Copy(hashBytes, 0, salt, 0, 16);
+            var pbkdf2 = new Rfc2898DeriveBytes(password, salt, 100000);
+            var hash = pbkdf2.GetBytes(20);
+            for (var i = 0; i < 20; i++)
+                if (hashBytes[i + 16] != hash[i])
+                    return false;
+            return true;
         }
     }
 }

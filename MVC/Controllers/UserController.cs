@@ -1,8 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.IdentityModel.Tokens.Jwt;
+using Azure;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using MVC.Context;
 using MVC.Models;
 using MVC.Services;
 using MVC.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace MVC.Controllers
@@ -45,7 +49,7 @@ namespace MVC.Controllers
 
         [HttpPost]
         //[Route("login")]
-        public async Task<IActionResult> Login([FromBody] LoginCredentials credentials) //TokenResponse
+        public async Task<IActionResult> LoginUser(LoginCredentials credentials) //TokenResponse
         {
             if (ModelState.IsValid)
             {
@@ -68,8 +72,39 @@ namespace MVC.Controllers
             }
 
             // Если вход не выполнен, возвращаем представление с ошибкой
-            return View(credentials);
+            return View("Login");
         }
+
+
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> GetProfile()
+        {
+            try
+            {
+                // Получаем значение заголовка "Authorization"
+                //string authorizationHeader = Request.Headers["Authorization"];
+                // Извлекаем токен Bearer из значения заголовка
+                //string bearerToken = authorizationHeader.Substring("Bearer ".Length);
+                string bearerToken = HttpContext.Session.GetString("Token");
+
+                var userId = await _userService.GetUserIdFromToken(bearerToken);
+
+                var userProfile = await _userService.GetProfile(userId);
+
+                if (userProfile == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(userProfile);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
 
         public IActionResult Login()
         {

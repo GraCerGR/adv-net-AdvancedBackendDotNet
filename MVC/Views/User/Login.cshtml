@@ -4,10 +4,25 @@
 
 @model LoginCredentials
 
-<form asp-controller="User" asp-action="Login" method="post">
+<form asp-controller="User" asp-action="LoginUser" method="post">
     <label>Email:</label>
     <input type="text" asp-for="Email" /><br />
     <label>Password:</label>
     <input type="password" asp-for="Password" /><br />
     <button type="submit">Login</button>
 </form>
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        <ul>
+            @foreach (var modelState in ViewData.ModelState.Values)
+            {
+                foreach (var error in modelState.Errors)
+                {
+                    <li>@error.ErrorMessage</li>
+                }
+            }
+        </ul>
+    </div>
+}
