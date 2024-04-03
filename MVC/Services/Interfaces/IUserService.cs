@@ -1,4 +1,5 @@
 ﻿using MVC.Models;
+using MVC.Models.DTO;
 
 namespace MVC.Services.Interfaces
 {
@@ -14,7 +15,7 @@ namespace MVC.Services.Interfaces
         //Task<TokenResponse> RegisterUser(UserRegisterDto userRegisterDto);
         //Task<TokenResponse> LoginUser(LoginDto credentials);
 
-        Task<UserModel> GetProfile(string guid);
+        Task<UserDto> GetProfile(string guid);
 
         Task<string> GetUserIdFromToken(string token);
     }

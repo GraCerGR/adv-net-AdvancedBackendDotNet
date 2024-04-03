@@ -106,6 +106,40 @@ namespace MVC.Controllers
         }
 
 
+        [HttpGet("{userApplicantId}")]
+        [Authorize]
+        public async Task<IActionResult> GetProfileById(string userApplicantId)
+        {
+            try
+            {
+                // Получаем значение заголовка "Authorization"
+                //string authorizationHeader = Request.Headers["Authorization"];
+                // Извлекаем токен Bearer из значения заголовка
+                //string bearerToken = authorizationHeader.Substring("Bearer ".Length);
+                string bearerToken = HttpContext.Session.GetString("Token");
+
+                var userId = await _userService.GetUserIdFromToken(bearerToken);
+
+                var userProfile = await _userService.GetProfile(userId);
+
+                var userApplicantProfile = await _userService.GetProfile(userApplicantId);
+
+                if (userProfile == null || userApplicantProfile == null)
+                {
+                    return NotFound();
+                }
+
+                //Проверка: UserId менеджер абитуриента userApplicantId
+
+                return Ok(userApplicantProfile);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+
         public IActionResult Login()
         {
             return View();

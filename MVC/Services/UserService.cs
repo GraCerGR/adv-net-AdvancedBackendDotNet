@@ -9,6 +9,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
+using MVC.Models.DTO;
 
 namespace MVC.Services
 {
@@ -133,7 +134,7 @@ namespace MVC.Services
         }
 
 
-        public async Task<UserModel> GetProfile(string userId)
+        public async Task<UserDto> GetProfile(string userId)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id.ToString() == userId);
 
@@ -142,8 +143,9 @@ namespace MVC.Services
                 return null;
             }
 
-            var userProfile = new UserModel
+            var userProfile = new UserDto
             {
+                Id = user.Id,
                 Name = user.Name,
                 Birthdate = user.Birthdate,
                 Gender = user.Gender,
